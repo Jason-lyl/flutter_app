@@ -246,11 +246,21 @@ class _ShoppingListState extends State<ShoppingList> {
 void main() {
   runApp(new MaterialApp(
     title: 'Shopping App',
-    home: new ShoppingList(
-      products: <Product>[
-        new Product(name: 'Eggs'),
-        new Product(name: 'Floure'),
-        new Product(name: 'Chocolate chipsss'),
+    home: new Stack(
+      children: <Widget>[
+        new ShoppingList(
+          products: <Product>[
+            new Product(name: 'Eggs'),
+            new Product(name: 'fFloure'),
+            new Product(name: 'Chocolate chipsss'),
+          ],
+        ),
+        new Center(child: new CircularProgressIndicator()),
+        new Center(
+          child: new Image.network(
+            'https://github.com/flutter/plugins/raw/master/packages/video_player/doc/demo_ipod.gif?raw=true',
+          ),
+        ),
       ],
     ),
   ));
