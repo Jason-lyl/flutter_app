@@ -2,7 +2,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/NavigatorView.dart';
+import 'package:flutter_app/demo/NavigatorView.dart';
 
 void main() => runApp(new FormApp());
 

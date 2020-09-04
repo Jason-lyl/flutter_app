@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/ExampleUI.dart';
-import 'package:flutter_app/FilePatch.dart';
-import 'package:flutter_app/NavigatorView.dart';
+import 'package:flutter_app/demo/ExampleUI.dart';
+import 'package:flutter_app/demo/FilePatch.dart';
+import 'package:flutter_app/demo/NavigatorView.dart';
+import '../main.dart';
+import 'myApp.dart';
 
 class BottomNavigationWidget extends StatefulWidget {
   @override
@@ -18,7 +20,7 @@ class BottomNavigationWidgetState extends State<BottomNavigationWidget> {
   void initState() {
     // TODO: implement initState
     pages
-    ..add(SampleApp())
+    ..add(TutorialHome())
         ..add(SampleApps())
         ..add(FilePathApp());
   }
@@ -30,6 +32,7 @@ class BottomNavigationWidgetState extends State<BottomNavigationWidget> {
      */
     return new Scaffold(
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         //底部导航栏的创建需要对应的功能标签作为子项，这里我就写了3个，每个子项包含一个图标和一个title。
         items: [
           BottomNavigationBarItem(
