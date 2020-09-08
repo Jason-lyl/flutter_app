@@ -79,6 +79,7 @@ class GSYStringZh extends GSYStringBase {
   @override
   String home_user_info = "个人信息";
   @override
+  // ignore: non_constant_identifier_names
   String home_change_theme = "切换主题";
   @override
   String home_language_default = "默认";
