@@ -26,7 +26,7 @@ class LogsInterceptors extends InterceptorsWrapper {
   static List<String> sHttpErrorUrl = new List<String>();
 
   @override
-  Future onRequest(RequestOptions options) async {
+   onRequest(RequestOptions options) async {
     if (Config.DEBUG) {
       print("请求Url: ${options.path}");
       print('请求头: ' + options.headers.toString());
@@ -45,7 +45,7 @@ class LogsInterceptors extends InterceptorsWrapper {
       }
 
       var map = {
-        // "header:": {...options.headers},
+        "header:": {...options.headers},
       };
       if (options.method == "POST") {
         map["data"] = data;
@@ -58,8 +58,59 @@ class LogsInterceptors extends InterceptorsWrapper {
   }
 
   @override
-  Future onResponse(Response response) {
-    // TODO: implement onResponse
+  onResponse(Response response) async {
+    if (Config.DEBUG) {
+      if (response != null) {
+        print('返回参数: ' + response.data.toString());
+      }
+    }
+    if (response.data is Map || response.data is List) {
+      try {
+        var data = Map<String, dynamic>();
+        data["data"] = response.data;
+        addLogic(
+            sResponsesHttpUrl, response?.request?.baseUrl?.toString() ?? "");
+        addLogic(sHttpResponses, data);
+      } catch (e) {
+        print(e);
+      }
+    } else if (response.data is String) {
+      try {
+        var data = Map<String, dynamic>();
+        data["data"] = response.data;
+        addLogic(sRequestHttpUrl, response?.request?.baseUrl?.toString() ?? "");
+        addLogic(sHttpRequest, data);
+      } catch (e) {
+        print(e);
+      }
+    } else if (response.data != null) {
+      try {
+        String data = response.data.toJson();
+        addLogic(
+            sResponsesHttpUrl, response?.request?.baseUrl?.toString() ?? "");
+        addLogic(sHttpResponses, json.decode(data));
+      } catch (e) {
+        print(e);
+      }
+    }
+  }
+
+  @override
+  onError(DioError err) async {
+    if (Config.DEBUG) {
+      print('请求异常: ' + err.toString());
+      print('请求异常信息: ' + err.response?.toString() ?? "");
+    }
+
+    try {
+      addLogic(sHttpErrorUrl, err.request.path ?? "null");
+      var errors = Map<String, dynamic>();
+      errors["error"] = err.message;
+      addLogic(sHttpError, errors);
+    } catch (e) {
+      print(e);
+    }
+    return err;
   }
 
   static addLogic(List list, data) {
