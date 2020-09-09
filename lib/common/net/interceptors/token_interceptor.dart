@@ -12,6 +12,7 @@ import 'package:flutter_app/common/config/config.dart';
 import 'package:flutter_app/common/local/local_storage.dart';
 import 'package:flutter_app/common/net/graphql/client.dart';
 
+/// token 拦截器
 class TokenInterceptors extends InterceptorsWrapper {
   String _token;
 

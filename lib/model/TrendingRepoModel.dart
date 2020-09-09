@@ -1,0 +1,49 @@
+/*
+ * Filename: /Users/youzy/Documents/demo/flutter_app/lib/page/TrendingRepoModel.dart
+ * Path: /Users/youzy/Documents/demo/flutter_app/lib/page
+ * Created Date: Wednesday, September 9th 2020, 5:41:24 pm
+ * Author: Jason
+ * 
+ * Copyright (c) 2020 app
+ */
+
+import 'package:json_annotation/json_annotation.dart';
+
+part 'TrendingRepoModel.g.dart';
+
+@JsonSerializable()
+class TrendingRepoModel {
+  String fullName;
+  String url;
+
+  String description;
+  String language;
+  String meta;
+  List<String> contributors;
+  String contributorsUrl;
+
+  String starCount;
+  String forkCount;
+  String name;
+  String reposName;
+
+  TrendingRepoModel(
+      this.fullName,
+      this.url,
+      this.description,
+      this.language,
+      this.meta,
+      this.contributors,
+      this.contributorsUrl,
+      this.starCount,
+      this.forkCount,
+      this.name,
+      this.reposName);
+
+  TrendingRepoModel.empty();
+
+  factory TrendingRepoModel.fromJson(Map<String, dynamic> json) =>
+      _$TrendingRepoModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TrendingRepoModelToJson(this);
+}
