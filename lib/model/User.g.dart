@@ -1,9 +1,10 @@
-/**
- * @author: Jason
- * @create_at: Sep 10, 2020
- */
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'User.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) {
   return User(
@@ -88,5 +89,5 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'owned_private_repos': instance.owned_private_repos,
       'disk_usage': instance.disk_usage,
       'collaborators': instance.collaborators,
-      'two_factor_authentication': instance.two_factor_authentication
+      'two_factor_authentication': instance.two_factor_authentication,
     };

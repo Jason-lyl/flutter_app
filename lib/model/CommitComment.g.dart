@@ -1,9 +1,10 @@
-/**
- * @author: Jason
- * @create_at: Sep 10, 2020
- */
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'CommitComment.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 CommitComment _$CommitCommentFromJson(Map<String, dynamic> json) {
   return CommitComment(
@@ -13,7 +14,7 @@ CommitComment _$CommitCommentFromJson(Map<String, dynamic> json) {
     json['position'] as int,
     json['line'] as int,
     json['commit_id'] as String,
-    json['create_id'] == null
+    json['created_at'] == null
         ? null
         : DateTime.parse(json['created_at'] as String),
     json['updated_at'] == null

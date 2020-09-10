@@ -1,14 +1,10 @@
-/*
- * Filename: /Users/youzy/Documents/demo/flutter_app/lib/model/TrendingRepoModel.g.dart
- * Path: /Users/youzy/Documents/demo/flutter_app/lib/model
- * Created Date: Wednesday, September 9th 2020, 5:54:35 pm
- * Author: Jason
- * 
- * Copyright (c) 2020 app
- */
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'TrendingRepoModel.dart';
 
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 TrendingRepoModel _$TrendingRepoModelFromJson(Map<String, dynamic> json) {
   return TrendingRepoModel(
@@ -20,10 +16,10 @@ TrendingRepoModel _$TrendingRepoModelFromJson(Map<String, dynamic> json) {
     (json['contributors'] as List)?.map((e) => e as String)?.toList(),
     json['contributorsUrl'] as String,
     json['starCount'] as String,
+    json['forkCount'] as String,
     json['name'] as String,
     json['reposName'] as String,
-    json['forkCount'] as String,
-    );
+  );
 }
 
 Map<String, dynamic> _$TrendingRepoModelToJson(TrendingRepoModel instance) =>

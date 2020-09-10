@@ -1,9 +1,10 @@
-/**
- * @author: Jason
- * @create_at: Sep 10, 2020
- */
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'CommitFile.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 CommitFile _$CommitFileFromJson(Map<String, dynamic> json) {
   return CommitFile(

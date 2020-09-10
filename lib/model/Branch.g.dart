@@ -1,12 +1,10 @@
-/*
- * Filename: /Users/youzy/Documents/demo/flutter_app/lib/model/Branch.g.dart
- * Path: /Users/youzy/Documents/demo/flutter_app/lib/model
- * Created Date: Tuesday, September 8th 2020, 1:45:01 pm
- * Author: Jason
- * 
- * Copyright (c) 2020 app
- */
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'Branch.dart';
+
+// **************************************************************************
+// BuiltValueGenerator
+// **************************************************************************
 
 Serializer<Branch> _$branchSerializer = new _$BranchSerializer();
 
@@ -165,3 +163,5 @@ class BranchBuilder implements Builder<Branch, BranchBuilder> {
     return _$result;
   }
 }
+
+// ignore_for_file: always_put_control_body_on_new_line,always_specify_types,annotate_overrides,avoid_annotating_with_dynamic,avoid_as,avoid_catches_without_on_clauses,avoid_returning_this,lines_longer_than_80_chars,omit_local_variable_types,prefer_expression_function_bodies,sort_constructors_first,test_types_in_equals,unnecessary_const,unnecessary_new

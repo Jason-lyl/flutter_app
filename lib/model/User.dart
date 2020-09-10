@@ -1,3 +1,5 @@
+import 'package:json_annotation/json_annotation.dart';
+
 /**
  * @author: Jason
  * @create_at: Sep 10, 2020
@@ -5,6 +7,7 @@
 
 part 'User.g.dart';
 
+@JsonSerializable()
 class User {
   User(
       this.login,
