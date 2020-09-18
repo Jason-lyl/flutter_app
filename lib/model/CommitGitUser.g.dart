@@ -18,5 +18,5 @@ Map<String, dynamic> _$CommitGitUserToJson(CommitGitUser instance) =>
     <String, dynamic>{
       'name': instance.name,
       'email': instance.email,
-      'data': instance.data?.toIso8601String(),
+      'data': instance.date?.toIso8601String(),
     };

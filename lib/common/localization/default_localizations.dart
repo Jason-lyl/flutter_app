@@ -34,7 +34,7 @@ class GSYLocalizations {
     return Localizations.of(context, GSYLocalizations);
   }
 
-  static GSYStringBase is18n(BuildContext context) {
+  static GSYStringBase i18n(BuildContext context) {
     return (Localizations.of(context, GSYLocalizations) as GSYLocalizations).currentLocalized;
   }
   

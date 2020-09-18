@@ -12,7 +12,7 @@ part 'Notification.g.dart';
 @JsonSerializable()
 class Notification {
   String id;
-   bool unread;
+  bool unread;
   String reason;
   @JsonKey(name: "updated_at")
   DateTime updateAt;

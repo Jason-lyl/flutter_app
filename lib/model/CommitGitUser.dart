@@ -10,9 +10,9 @@ part 'CommitGitUser.g.dart';
 class CommitGitUser {
   String name;
   String email;
-  DateTime data;
+  DateTime date;
 
-  CommitGitUser(this.name, this.email, this.data);
+  CommitGitUser(this.name, this.email, this.date);
 
   factory CommitGitUser.fromJson(Map<String, dynamic> json) =>
       _$CommitGitUserFromJson(json);
