@@ -1,16 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/common/localization/default_localizations.dart';
+import 'package:flutter_app/common/style/gsy_style.dart';
+import 'package:flutter_app/widget/gsy_common_option_widget.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /**
  * @author: Jason
  * @create_at: Sep 16, 2020
  */
 
-@Deprecated("待完善")
 class GSYWebView extends StatefulWidget {
   final String url;
   final String title;
 
   GSYWebView(this.url, this.title);
 
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  _GSYWebViewState createState() => _GSYWebViewState();
+}
+
+class _GSYWebViewState extends State<GSYWebView> {
+  _renderTitle() {
+    if (widget.url == null || widget.url.length == 0) {
+      return new Text(widget.title);
+    }
+    return new Row(children: [
+      new Expanded(
+          child: new Container(
+        child: new Text(
+          widget.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      )),
+      GSYCommonOptionWidget(url: widget.url),
+    ]);
+  }
+
+  final FocusNode focusNode = new FocusNode();
+
+  bool isLoading = true;
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Scaffold(
+      appBar: new AppBar(
+        title: _renderTitle(),
+      ),
+      body: new Stack(
+        children: <Widget>[
+          TextField(
+            focusNode: focusNode,
+          ),
+          WebView(
+              initialUrl: widget.url,
+              javascriptMode: JavascriptMode.unrestricted,
+              onPageFinished: (_) {
+                setState(() {
+                  isLoading = false;
+                });
+              },
+              javascriptChannels: Set.from([
+                JavascriptChannel(
+                    name: 'Print',
+                    onMessageReceived: (JavascriptMessage message) {
+                      print(message.message);
+                      FocusScope.of(context).requestFocus(focusNode);
+                    })
+              ])),
+          if (isLoading)
+            new Center(
+              child: new Container(
+                width: 200.0,
+                height: 200.0,
+                padding: new EdgeInsets.all(4.0),
+                child: new Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    new SpinKitDoubleBounce(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    new Container(width: 10.0),
+                    new Container(
+                      child: new Text(
+                          GSYLocalizations.i18n(context).loading_text,
+                          style: GSYConstant.middleText),
+                    )
+                  ],
+                ),
+              ),
+            )
+        ],
+      ),
+    );
+  }
 }
