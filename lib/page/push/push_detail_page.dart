@@ -5,8 +5,12 @@ import 'package:flutter_app/common/dao/repos_dao.dart';
 import 'package:flutter_app/common/style/gsy_style.dart';
 import 'package:flutter_app/common/utils/html_utils.dart';
 import 'package:flutter_app/common/utils/navigator_utils.dart';
+import 'package:flutter_app/model/PushCommit.dart';
 import 'package:flutter_app/page/push/widget/push_code_item.dart';
 import 'package:flutter_app/page/push/widget/push_header.dart';
+import 'package:flutter_app/widget/gsy_common_option_widget.dart';
+import 'package:flutter_app/widget/gsy_title_bar.dart';
+import 'package:flutter_app/widget/pull/gsy_pull_load_widget.dart';
 import 'package:flutter_app/widget/state/gsy_list_state.dart';
 
 /**
@@ -36,9 +40,6 @@ class _PushDetailPageState extends State<PushDetailPage>
   String htmlUrl;
 
   @override
-  bool get isRefreshFirst => throw UnimplementedError();
-
-  @override
   Future<Null> handleReresh() async {
     if (isLoading) {
       return null;
@@ -47,6 +48,21 @@ class _PushDetailPageState extends State<PushDetailPage>
     page = 1;
 
     // 获取提交信息
+    var res = await _getDataLogic();
+    if (res != null && res.result) {
+      PushCommit pushCommit = res.data;
+      pullLoadWidgetControl.dataList.clear();
+      if (isShow) {
+        setState(() {
+          pushHeaderViewModel = PushHeaderViewModel.forMap(pushCommit);
+          pullLoadWidgetControl.dataList.addAll(pushCommit.files);
+          pullLoadWidgetControl.needLoadMore.value = false;
+          htmlUrl = pushCommit.htmlUrl;
+        });
+      }
+    }
+    isLoading = false;
+    return null;
   }
 
   // 绘制头部和提交item
@@ -77,9 +93,53 @@ class _PushDetailPageState extends State<PushDetailPage>
     });
   }
 
-  _getDataLoginc() async {
+  _getDataLogic() async {
     return await ReposDao.getReposCommitsInfoDao(
         widget.userName, widget.reposName, widget.sha);
   }
-  
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  requestRefresh() async {}
+
+  @override
+  requestLoadMore() async {
+    return null;
+  }
+
+  @override
+  bool get isRefreshFirst => true;
+
+  @override
+  bool get needHeader => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    Widget widgetContent =
+        (widget.needHomeIcon) ? null : new GSYCommonOptionWidget(url: htmlUrl);
+    return new Scaffold(
+      appBar: new AppBar(
+        title: GSYTitleBar(
+          widget.reposName,
+          rightWidget: widgetContent,
+          needRightLocalIcon: widget.needHomeIcon,
+          iconData: GSYICons.HOME,
+          onRigintIconPressed: (_) {
+            NavigatorUtils.goReposDetail(
+                context, widget.userName, widget.reposName);
+          },
+        ),
+      ),
+      body: GSYPullLoadWidget(
+        pullLoadWidgetControl,
+        (BuildContext context, int index) => _renderEventItem(index),
+        handleReresh,
+        onLoadMore,
+        refreshKey: refreshIndicatorKey,
+      ),
+    );
+  }
 }
