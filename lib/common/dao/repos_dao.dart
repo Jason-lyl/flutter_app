@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_app/common/config/config.dart';
 import 'package:flutter_app/common/dao/dao_result.dart';
@@ -9,14 +10,26 @@ import 'package:flutter_app/common/net/address.dart';
 import 'package:flutter_app/common/net/api.dart';
 import 'package:flutter_app/common/net/graphql/client.dart';
 import 'package:flutter_app/common/net/result_data.dart';
+import 'package:flutter_app/common/net/transformer.dart';
 import 'package:flutter_app/common/net/trending/github_trending.dart';
 import 'package:flutter_app/common/utils/common_utils.dart';
 import 'package:flutter_app/db/provider/repos/read_history_db_provider.dart';
+import 'package:flutter_app/db/provider/repos/repository_commits_db_provider.dart';
 import 'package:flutter_app/db/provider/repos/repository_detail_db_provider.dart';
 import 'package:flutter_app/db/provider/repos/repository_detail_readme_db_provider.dart';
+import 'package:flutter_app/db/provider/repos/repository_event_db_provider.dart';
+import 'package:flutter_app/db/provider/repos/repository_fork_db_provider.dart';
+import 'package:flutter_app/db/provider/repos/repository_star_db_provider.dart';
+import 'package:flutter_app/db/provider/repos/repository_watcher_db_provider.dart';
 import 'package:flutter_app/db/provider/repos/trend_repository_db_provider.dart';
+import 'package:flutter_app/db/provider/user/user_repos_db_provider.dart';
+import 'package:flutter_app/db/provider/user/user_stared_db_provider.dart';
+import 'package:flutter_app/model/Branch.dart';
+import 'package:flutter_app/model/Event.dart';
+import 'package:flutter_app/model/FileModel.dart';
 import 'package:flutter_app/model/PushCommit.dart';
 import 'package:flutter_app/model/Release.dart';
+import 'package:flutter_app/model/RepoCommit.dart';
 import 'package:flutter_app/model/Repository.dart';
 import 'package:flutter_app/model/RepositoryQL.dart';
 import 'package:flutter_app/model/TrendingRepoModel.dart';
@@ -96,6 +109,436 @@ class ReposDao {
     }
     return await next();
   }
+
+
+
+ /**
+   * 仓库活动事件
+   */
+  static getRepositoryEventDao(userName, reposName,
+      {page = 0, branch = "master", needDb = false}) async {
+    String fullName = userName + "/" + reposName;
+    RepositoryEventDbProvider provider = new RepositoryEventDbProvider();
+
+    next() async {
+      String url = Address.getReposEvent(userName, reposName) +
+          Address.getPageParams("?", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result) {
+        List<Event> list = new List();
+        var data = res.data;
+        if (data == null || data.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < data.length; i++) {
+          list.add(Event.fromJson(data[i]));
+        }
+        if (needDb) {
+          provider.insert(fullName, json.encode(data));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<Event> list = await provider.getEvents(fullName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 获取用户对当前仓库的star、watcher状态
+   */
+  static getRepositoryStatusDao(userName, reposName) async {
+    String urls = Address.resolveStarRepos(userName, reposName);
+    String urlw = Address.resolveWatcherRepos(userName, reposName);
+    var resS = await httpManager.netFetch(urls, null, null, null, noTip: true);
+    var resW = await httpManager.netFetch(urlw, null, null, null, noTip: true);
+    var data = {"star": resS.result, "watch": resW.result};
+    return new DataResult(data, true);
+  }
+
+  /**
+   * 获取仓库的提交列表
+   */
+  static getReposCommitsDao(userName, reposName,
+      {page = 0, branch = "master", needDb = false}) async {
+    String fullName = userName + "/" + reposName;
+
+    RepositoryCommitsDbProvider provider = new RepositoryCommitsDbProvider();
+
+    next() async {
+      String url = Address.getReposCommits(userName, reposName) +
+          Address.getPageParams("?", page) +
+          "&sha=" +
+          branch;
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result) {
+        List<RepoCommit> list = new List();
+        var data = res.data;
+        if (data == null || data.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < data.length; i++) {
+          list.add(RepoCommit.fromJson(data[i]));
+        }
+        if (needDb) {
+          provider.insert(fullName, branch, json.encode(data));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<RepoCommit> list = await provider.getData(fullName, branch);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /***
+   * 获取仓库的文件列表
+   */
+  static getReposFileDirDao(userName, reposName,
+      {path = '', branch, text = false, isHtml = false}) async {
+    String url = Address.reposDataDir(userName, reposName, path, branch);
+    var res = await httpManager.netFetch(
+      url,
+      null,
+      //text ? {"Accept": 'application/vnd.github.VERSION.raw'} : {"Accept": 'application/vnd.github.html'},
+      isHtml
+          ? {"Accept": 'application/vnd.github.html'}
+          : {"Accept": 'application/vnd.github.VERSION.raw'},
+      new Options(contentType: text ? "text" : "json"),
+    );
+    if (res != null && res.result) {
+      if (text) {
+        return new DataResult(res.data, true);
+      }
+      List<FileModel> list = new List();
+      var data = res.data;
+      if (data == null || data.length == 0) {
+        return new DataResult(null, false);
+      }
+      List<FileModel> dirs = [];
+      List<FileModel> files = [];
+      for (int i = 0; i < data.length; i++) {
+        FileModel file = FileModel.fromJson(data[i]);
+        if (file.type == 'file') {
+          files.add(file);
+        } else {
+          dirs.add(file);
+        }
+      }
+      list.addAll(dirs);
+      list.addAll(files);
+      return new DataResult(list, true);
+    } else {
+      return new DataResult(null, false);
+    }
+  }
+
+  /**
+   * star仓库
+   */
+  static Future<DataResult> doRepositoryStarDao(
+      userName, reposName, star) async {
+    String url = Address.resolveStarRepos(userName, reposName);
+    var res = await httpManager.netFetch(
+        url, null, null, new Options(method: !star ? 'PUT' : 'DELETE'));
+    return Future<DataResult>(() {
+      return new DataResult(null, res.result);
+    });
+  }
+
+  /**
+   * watcher仓库
+   */
+  static doRepositoryWatchDao(userName, reposName, watch) async {
+    String url = Address.resolveWatcherRepos(userName, reposName);
+    print("##### $watch");
+    var res = await httpManager.netFetch(
+        url, null, null, new Options(method: !watch ? 'PUT' : 'DELETE'));
+    return new DataResult(null, res.result);
+  }
+
+  /**
+   * 获取当前仓库所有订阅用户
+   */
+  static getRepositoryWatcherDao(userName, reposName, page,
+      {needDb = false}) async {
+    String fullName = userName + "/" + reposName;
+    RepositoryWatcherDbProvider provider = new RepositoryWatcherDbProvider();
+
+    next() async {
+      String url = Address.getReposWatcher(userName, reposName) +
+          Address.getPageParams("?", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result) {
+        List<User> list = new List();
+        var data = res.data;
+        if (data == null || data.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < data.length; i++) {
+          list.add(new User.fromJson(data[i]));
+        }
+        if (needDb) {
+          provider.insert(fullName, json.encode(data));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<User> list = await provider.geData(fullName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 获取当前仓库所有star用户
+   */
+  static getRepositoryStarDao(userName, reposName, page,
+      {needDb = false}) async {
+    String fullName = userName + "/" + reposName;
+    RepositoryStarDbProvider provider = new RepositoryStarDbProvider();
+    next() async {
+      String url = Address.getReposStar(userName, reposName) +
+          Address.getPageParams("?", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result) {
+        List<User> list = new List();
+        var data = res.data;
+        if (data == null || data.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < data.length; i++) {
+          list.add(new User.fromJson(data[i]));
+        }
+        if (needDb) {
+          provider.insert(fullName, json.encode(data));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<User> list = await provider.geData(fullName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 获取仓库的fork分支
+   */
+  static getRepositoryForksDao(userName, reposName, page,
+      {needDb = false}) async {
+    String fullName = userName + "/" + reposName;
+    RepositoryForkDbProvider provider = new RepositoryForkDbProvider();
+    next() async {
+      String url = Address.getReposForks(userName, reposName) +
+          Address.getPageParams("?", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result && res.data.length > 0) {
+        List<Repository> list = new List();
+        var dataList = res.data;
+        if (dataList == null || dataList.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < dataList.length; i++) {
+          var data = dataList[i];
+          list.add(Repository.fromJson(data));
+        }
+        if (needDb) {
+          provider.insert(fullName, json.encode(dataList));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<Repository> list = await provider.geData(fullName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 获取用户所有star
+   */
+  static getStarRepositoryDao(userName, page, sort, {needDb = false}) async {
+    UserStaredDbProvider provider = new UserStaredDbProvider();
+    next() async {
+      String url =
+          Address.userStar(userName, sort) + Address.getPageParams("&", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result && res.data.length > 0) {
+        List<Repository> list = new List();
+        var dataList = res.data;
+        if (dataList == null || dataList.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < dataList.length; i++) {
+          var data = dataList[i];
+          list.add(Repository.fromJson(data));
+        }
+        if (needDb) {
+          provider.insert(userName, json.encode(dataList));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<Repository> list = await provider.geData(userName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 用户的仓库
+   */
+  static getUserRepositoryDao(userName, page, sort, {needDb = false}) async {
+    UserReposDbProvider provider = new UserReposDbProvider();
+    next() async {
+      String url =
+          Address.userRepos(userName, sort) + Address.getPageParams("&", page);
+      var res = await httpManager.netFetch(url, null, null, null);
+      if (res != null && res.result && res.data.length > 0) {
+        List<Repository> list = new List();
+        var dataList = res.data;
+        if (dataList == null || dataList.length == 0) {
+          return new DataResult(null, false);
+        }
+        for (int i = 0; i < dataList.length; i++) {
+          var data = dataList[i];
+          list.add(Repository.fromJson(data));
+        }
+        if (needDb) {
+          provider.insert(userName, json.encode(dataList));
+        }
+        return new DataResult(list, true);
+      } else {
+        return new DataResult(null, false);
+      }
+    }
+
+    if (needDb) {
+      List<Repository> list = await provider.geData(userName);
+      if (list == null) {
+        return await next();
+      }
+      DataResult dataResult = new DataResult(list, true, next: next);
+      return dataResult;
+    }
+    return await next();
+  }
+
+  /**
+   * 创建仓库的fork分支
+   */
+  static createForkDao(userName, reposName) async {
+    String url = Address.createFork(userName, reposName);
+    var res = await httpManager.netFetch(
+        url, null, null, new Options(method: "POST"));
+    return new DataResult(null, res.result);
+  }
+
+  /**
+   * 获取当前仓库所有分支
+   */
+  static getBranchesDao(userName, reposName) async {
+    String url = Address.getbranches(userName, reposName);
+    var res = await httpManager.netFetch(url, null, null, null);
+    if (res != null && res.result && res.data.length > 0) {
+      List<String> list = new List();
+      var dataList = res.data;
+      if (dataList == null || dataList.length == 0) {
+        return new DataResult(null, false);
+      }
+      for (int i = 0; i < dataList.length; i++) {
+        var data = dataList[i];
+
+        ///测试代码
+        Serializer<Branch> serializerForType =
+            serializers.serializerForType(Branch);
+        var test = serializers.deserializeWith<Branch>(serializerForType, data);
+
+        /// 反序列化
+        Map result = serializers.serializeWith(serializerForType, test);
+        //print("###### $test ${result}");
+
+        list.add(data['name']);
+      }
+      return new DataResult(list, true);
+    } else {
+      return new DataResult(null, false);
+    }
+  }
+
+  /**
+   * 用户的前100仓库
+   */
+  static getUserRepository100StatusDao(userName) async {
+    String url = Address.userRepos(userName, 'pushed') + "&page=1&per_page=100";
+    var res = await httpManager.netFetch(url, null, null, null);
+    List<Repository> honorList = List();
+    if (res != null && res.result && res.data.length > 0) {
+      int stared = 0;
+      for (int i = 0; i < res.data.length; i++) {
+        var data = res.data[i];
+        Repository repository = new Repository.fromJson(data);
+        stared += repository.watchersCount;
+        honorList.add(repository);
+      }
+      //排序
+      honorList.sort((r1, r2) => r2.watchersCount - r1.watchersCount);
+      return new DataResult({"stared": stared, "list": honorList}, true);
+    }
+    return new DataResult(null, false);
+  }
+
 
   /*
   仓库的详情数据

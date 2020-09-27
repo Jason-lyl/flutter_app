@@ -7,7 +7,10 @@ import 'package:flutter_app/common/utils/navigator_utils.dart';
 import 'package:flutter_app/model/Issue.dart';
 import 'package:flutter_app/page/issue/widget/issue_header_item.dart';
 import 'package:flutter_app/page/issue/widget/issue_item.dart';
+import 'package:flutter_app/widget/gsy_common_option_widget.dart';
 import 'package:flutter_app/widget/gsy_flex_button.dart';
+import 'package:flutter_app/widget/gsy_title_bar.dart';
+import 'package:flutter_app/widget/pull/gsy_pull_load_widget.dart';
 import 'package:flutter_app/widget/state/gsy_list_state.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -24,8 +27,8 @@ class IssueDetailPage extends StatefulWidget {
 
   IssueDetailPage(this.userName, this.reposName, this.isssueNum,
       {this.needHomeIcon = false});
-
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  @override
+  _IssueDetailPageState createState() => _IssueDetailPageState();
 }
 
 class _IssueDetailPageState extends State<IssueDetailPage>
@@ -81,13 +84,25 @@ class _IssueDetailPageState extends State<IssueDetailPage>
                         color: GSYColors.white,
                         text: GSYLocalizations.i18n(context)
                             .issue_edit_issue_commit,
-                        onPress: () {},
+                        onPress: () {
+                          _editCommit(issue.id.toString(), issue.body);
+                        },
                       ),
                       new GSYFlexButton(
                         color: GSYColors.white,
                         text: GSYLocalizations.i18n(context)
                             .issue_edit_issue_delete_commit,
-                        onPress: () {},
+                        onPress: () {
+                          _deleteCommit(issue.id.toString());
+                        },
+                      ),
+                      new GSYFlexButton(
+                        color: GSYColors.white,
+                        text: GSYLocalizations.i18n(context)
+                            .issue_edit_issue_copy_commit,
+                        onPress: () {
+                          CommonUtils.copy(issue.body, context);
+                        },
                       )
                     ],
                   ),
@@ -216,7 +231,154 @@ class _IssueDetailPageState extends State<IssueDetailPage>
     }
   }
 
+  //回复 issue
+  _replyIssue() {
+    // 回复 Info
+    issueInfoTitleControl = new TextEditingController(text: "");
+    issueInfoValueControl = new TextEditingController(text: "");
+
+    String content = "";
+    CommonUtils.showEditDialog(
+      context,
+      GSYLocalizations.i18n(context).issue_reply_issue,
+      null,
+      (replyContent) {
+        content = replyContent;
+      },
+      () {
+        if (content == null || content.trim().length == 0) {
+          Fluttertoast.showToast(
+              msg: GSYLocalizations.i18n(context)
+                  .issue_edit_issue_content_not_be_null);
+          return;
+        }
+        CommonUtils.showLoadingDialog(context);
+        // 提交评论
+        IssureDao.addIssueCommentDao(
+                widget.userName, widget.reposName, widget.isssueNum, content)
+            .then((reslut) {
+          showRefreshLoading();
+          Navigator.pop(context);
+          Navigator.pop(context);
+        });
+      },
+      needTitle: false,
+      titleController: issueInfoTitleControl,
+      valueController: issueInfoValueControl,
+    );
+  }
+
+  // 获取底部状态控件显示
+  _getBottomWidget() {
+    List<Widget> bottomWidget = (!headerStatus)
+        ? []
+        : <Widget>[
+            new FlatButton(
+              onPressed: () {
+                _replyIssue();
+              },
+              child: new Text(GSYLocalizations.i18n(context).issue_reply,
+                  style: GSYConstant.smallText),
+            ),
+            new Container(
+              width: 0.3,
+              height: 30.0,
+              color: GSYColors.subLightTextColor,
+            ),
+            new FlatButton(
+              onPressed: () {
+                CommonUtils.showLoadingDialog(context);
+                IssureDao.editIssueDao(
+                    widget.userName, widget.reposName, widget.isssueNum, {
+                  "state": (issueHeaderViewModel.state == "closed")
+                      ? 'open'
+                      : 'closed'
+                }).then((result) {
+                  _getHeaderInfo();
+                  Navigator.pop(context);
+                });
+              },
+              child: new Text(
+                (issueHeaderViewModel.state == "closed")
+                    ? GSYLocalizations.i18n(context).issue_open
+                    : GSYLocalizations.i18n(context).issue_close,
+                style: GSYConstant.smallText,
+              ),
+            ),
+            new Container(
+              width: 0.3,
+              height: 30.0,
+              color: GSYColors.subLightTextColor,
+            ),
+            new FlatButton(
+              onPressed: () {
+                CommonUtils.showLoadingDialog(context);
+                IssureDao.lockIssueDao(widget.userName, widget.reposName,
+                        widget.isssueNum, issueHeaderViewModel.locked)
+                    .then((result) {
+                  _getHeaderInfo();
+                  Navigator.pop(context);
+                });
+              },
+              child: new Text(
+                (issueHeaderViewModel.locked)
+                    ? GSYLocalizations.i18n(context).issue_unlock
+                    : GSYLocalizations.i18n(context).issue_lock,
+                style: GSYConstant.smallText,
+              ),
+            )
+          ];
+    return bottomWidget;
+  }
+
   @override
-  // TODO: implement isRefreshFirst
-  bool get isRefreshFirst => throw UnimplementedError();
+  bool get wantKeepAlive => true;
+
+  @override
+  requestRefresh() async {
+    return await _getDataLogic();
+  }
+
+  @override
+  requestLoadMore() async {
+    return await _getDataLogic();
+  }
+
+  @override
+  bool get isRefreshFirst => true;
+
+  @override
+  bool get needHeader => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    Widget widgetContent = (widget.needHomeIcon)
+        ? null
+        : new GSYCommonOptionWidget(
+            url: htmlUrl,
+          );
+    return new Scaffold(
+      persistentFooterButtons: _getBottomWidget(),
+      appBar: new AppBar(
+        title: GSYTitleBar(
+          widget.reposName,
+          rightWidget: widgetContent,
+          needRightLocalIcon: widget.needHomeIcon,
+          iconData: GSYICons.HOME,
+          onRigintIconPressed: (_) {
+            NavigatorUtils.goReposDetail(
+                context, widget.userName, widget.reposName);
+          },
+        ),
+      ),
+      body: GSYPullLoadWidget(
+        pullLoadWidgetControl,
+        (BuildContext context, int index) => _renderEventItem(index),
+        handleReresh,
+        onLoadMore,
+        refreshKey: refreshIndicatorKey,
+      ),
+    );
+  }
 }
