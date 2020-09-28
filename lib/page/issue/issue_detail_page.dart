@@ -121,7 +121,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
 
   // 获取头部数据
   _getHeaderInfo() {
-    IssureDao.getIssueInfoDao(
+    .getIssueInfoDao(
             widget.userName, widget.reposName, widget.isssueNum)
         .then((res) {
       if (res != null && res.result) {
@@ -169,7 +169,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
         }
         CommonUtils.showLoadingDialog(context);
         // 提交修改
-        IssureDao.editCommentDao(widget.userName, widget.reposName,
+        .editCommentDao(widget.userName, widget.reposName,
             widget.isssueNum, id, {"body": contentData}).then((result) {
           showRefreshLoading();
           Navigator.pop(context);
@@ -186,7 +186,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
     Navigator.pop(context);
     CommonUtils.showLoadingDialog(context);
     // 提交修改
-    IssureDao.deleteCommentDao(
+    .deleteCommentDao(
             widget.userName, widget.reposName, widget.isssueNum, id)
         .then((result) {
       Navigator.pop(context);
@@ -222,7 +222,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
         CommonUtils.showLoadingDialog(context);
 
         // 提交修改
-        IssureDao.editIssueDao(
+        .editIssueDao(
             widget.userName,
             widget.reposName,
             widget.isssueNum,
@@ -254,7 +254,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
         }
         CommonUtils.showLoadingDialog(context);
         // 提交评论
-        IssureDao.addIssueCommentDao(
+        .addIssueCommentDao(
                 widget.userName, widget.reposName, widget.isssueNum, content)
             .then((reslut) {
           showRefreshLoading();
@@ -288,7 +288,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
             new FlatButton(
               onPressed: () {
                 CommonUtils.showLoadingDialog(context);
-                IssureDao.editIssueDao(
+                .editIssueDao(
                     widget.userName, widget.reposName, widget.isssueNum, {
                   "state": (issueHeaderViewModel.state == "closed")
                       ? 'open'
@@ -313,7 +313,7 @@ class _IssueDetailPageState extends State<IssueDetailPage>
             new FlatButton(
               onPressed: () {
                 CommonUtils.showLoadingDialog(context);
-                IssureDao.lockIssueDao(widget.userName, widget.reposName,
+                .lockIssueDao(widget.userName, widget.reposName,
                         widget.isssueNum, issueHeaderViewModel.locked)
                     .then((result) {
                   _getHeaderInfo();

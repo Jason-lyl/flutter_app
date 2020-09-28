@@ -14,7 +14,7 @@ import 'package:flutter_app/model/Issue.dart';
  * @create_at: Sep 14, 2020
  */
 
-class IssureDao {
+class IssueDao {
   static getRepositoryIssueDao(userName, repository, state,
       {sort, direction, page = 0, needDb = false}) async {
     String fullName = userName + "/" + repository;

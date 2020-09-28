@@ -148,7 +148,7 @@ class _NotifyPageState extends State<NotifyPage>
       body: GSYPullLoadWidget(
         pullLoadWidgetControl,
         (BuildContext context, int index) => _renderItem(index),
-        handleReresh,
+        handleRefresh,
         onLoadMore,
         refreshKey: refreshIndicatorKey,
       ),

@@ -208,7 +208,7 @@ class RepositoryDetailFileListPageState
             return GSYPullLoadWidget(
               pullLoadWidgetControl,
               (BuildContext context, int index) => _renderEventItem(index),
-              handleReresh,
+              handleRefresh,
               onLoadMore,
               refreshKey: refreshIndicatorKey,
             );

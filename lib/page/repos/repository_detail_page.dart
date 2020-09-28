@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/page/repos/repository_detail_info_page.dart';
+import 'package:flutter_app/page/repos/repository_detail_readme_page.dart';
 import 'package:flutter_app/page/repos/repository_file_list_page.dart';
 
 /**
@@ -15,14 +17,24 @@ class RepositoryDetailPage extends StatefulWidget {
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-// class _RepositoryDetailPageState extends State<RepositoryDetailPage>
-//     with SingleTickerProviderStateMixin {
-//   // 文件列表页的 GlobalKey ，可用于当前控件控制文件页行为
-//   GlobalKey<RepositoryDetailFileListPageState> fileListKey =
-//       new GlobalKey<RepositoryDetailFileListPageState>();
+class _RepositoryDetailPageState extends State<RepositoryDetailPage>
+    with SingleTickerProviderStateMixin {
+  // 文件列表页的 GlobalKey ，可用于当前控件控制文件页行为
+  GlobalKey<RepositoryDetailFileListPageState> fileListKey =
+      new GlobalKey<RepositoryDetailFileListPageState>();
 
-//       // 详细信息页 ，可用于当前控件控制文件页行为
-// }
+  // 详细信息页 ，可用于当前控件控制文件页行为
+  GlobalKey<RepositoryDetaiInfoPageState> infoListKey =
+      new GlobalKey<RepositoryDetaiInfoPageState>();
+
+  // readme 页面的 GlobalKey ，可用于当前控件控制文件也行为
+  GlobalKey<RepositoryDetailReadmePageState> reademeKey =
+      new GlobalKey<RepositoryDetailReadmePageState>();
+
+      
+
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 ///底部状态实体
 class BottomStatusModel {

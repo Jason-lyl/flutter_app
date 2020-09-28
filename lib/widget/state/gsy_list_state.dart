@@ -57,7 +57,7 @@ mixin GSYListState<T extends StatefulWidget>
     }
   }
 
-  Future<Null> handleReresh() async {
+  Future<Null> handleRefresh() async {
     if (isLoading) {
       if (isRefreshing) {
         return null;
