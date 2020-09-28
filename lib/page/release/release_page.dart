@@ -137,7 +137,7 @@ class _ReleasePageState extends State<ReleasePage>
       body: GSYPullLoadWidget(
           pullLoadWidgetControl,
           (BuildContext context, int index) => _renderEventItem(index),
-          handleReresh,
+          handleRefresh,
           onLoadMore,
           refreshKey: refreshIndicatorKey),
     );
